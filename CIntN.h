@@ -7,6 +7,7 @@
 #include <fstream>
 #include <map>
 #include <vector>
+#include <omp.h>
 using namespace std;
 
 class CIntN0;
