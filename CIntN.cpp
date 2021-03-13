@@ -5,7 +5,7 @@ CIntN::CIntN()
 {
     sign = true;
     dimension = 0;
-    digits = {};
+    digits = nullptr;
 }
 CIntN::~CIntN()
 {
@@ -18,30 +18,25 @@ CIntN::~CIntN()
 
 CIntN::CIntN(int dimension, bool sign, string digits_string, string output_file)
 {
-    try
+
+    this->sign = sign;
+    this->dimension = dimension;
+    this->output_file = output_file;
+    if (static_cast<size_t>(dimension) != digits_string.size())
     {
-        this->sign = sign;
-        this->dimension = dimension;
-        this->output_file = output_file;
-        if (static_cast<size_t>(dimension) != digits_string.size())
-        {
-            throw dimension_error("Error: dimension mismatch.");
-        }
-        digits = new int[dimension];
-        for (size_t i = 0; i < digits_string.size(); ++i)
-        {
-            char symbol = static_cast<char>(digits_string[i]);
-            if (symbol < 48 || symbol > 57)
-            {
-                throw wrong_input("Error: non-numeric character found.");
-            }
-            digits[i] = symbol - 48;
-        }
-    }
-    catch (const exception& exc)
-    {
-        cerr << exc.what() << endl;
+        cout << "Error: dimension mismatch." << endl;
         exit(-1);
+    }
+    digits = new int[dimension];
+    for (size_t i = 0; i < digits_string.size(); ++i)
+    {
+        char symbol = static_cast<char>(digits_string[i]);
+        if (symbol < 48 || symbol > 57)
+        {
+            cout << "Error: non-numeric character found." << endl;
+            exit(-1);
+        }
+        digits[i] = symbol - 48;
     }
 }
 
@@ -58,22 +53,16 @@ CIntN::CIntN(const CIntN& to_copy)
 
 CIntN& CIntN::operator=(const CIntN& equals_to)
 {
-    try
+    if (dimension != 0)
     {
-        if (this->dimension != equals_to.dimension)
-        {
-            throw dimension_error("Error: dimension mismatch.");
-        }
-        sign = equals_to.sign;
-        for (int i = 0; i < dimension; ++i)
-        {
-            digits[i] = equals_to.digits[i];
-        }
+        delete[] digits;
     }
-    catch (const exception& exc)
+    dimension = equals_to.dimension;
+    digits = new int[dimension];
+    sign = equals_to.sign;
+    for (int i = 0; i < dimension; ++i)
     {
-        cerr << exc.what() << endl;
-        exit(-1);
+        digits[i] = equals_to.digits[i];
     }
     return *this;
 }
@@ -100,7 +89,7 @@ void CIntN::print() const noexcept
     cout << endl;
 }
 
-int CIntN::getabs() const noexcept
+long long int CIntN::getabs() const noexcept
 {
     int num = 0;
     for (int i = dimension - 1; i >= 0; --i)
@@ -128,9 +117,10 @@ string CIntN::pure_plus(const CIntN& num_1, const CIntN& num_2) const
     {
         res_digits[i] = 0;
     }
+//#pragma omp parallel for
     for (int i = num_1.dimension - 1; i >= 0; --i)
     {
-        int sum = num_1.digits[i] + num_2.digits[i];
+        int sum = num_1.digits[i] + num_2.digits[i] + res_digits[i];
         if (sum > 9)
         {
             if (i == 0)
@@ -178,6 +168,7 @@ string CIntN::pure_minus(const CIntN& num_1, const CIntN& num_2) const
         digits_2 = digits_1;
         digits_1 = tmp;
     }
+//#pragma omp parallel for
     for (int i = 0; i < num_1.dimension; ++i)
     {
         int delta = digits_1[i] - digits_2[i];
