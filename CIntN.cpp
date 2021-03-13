@@ -142,13 +142,13 @@ string CIntN::pure_plus(const CIntN& num_1, const CIntN& num_2) const
             }
             else
             {
-                res_digits[i] += sum - 10;
+                res_digits[i] = sum - 10;
                 res_digits[i - 1] = 1;
             }
         }
         else
         {
-            res_digits[i] += sum;
+            res_digits[i] = sum;
         }
     }
     string res_sdigits = "";
