@@ -1,15 +1,21 @@
-#include "CIntN.h"
-#include "Create.h"
-#include "Autotest.h"
-
 int main(int argc, char* argv[])
 {
-    if (!autotest())
+    try
     {
+        autotest();
+        cout << "Autotest passed." << endl;
+    }
+    catch (const test_error& exc)
+    {
+        cout << "Failed test " << exc.test_number << ": wrong result is " << exc.test_result << endl;
         cout << "Autotest Failed!" << endl;
         exit(-1);
     }
-    cout << "Autotest passed" << endl;
+    catch (...)
+    {
+        cout << "Unknown exception caught during autotest. Exiting." << endl;
+        exit(-1);
+    }
 
     string input_filename = "Input.txt";
     ifstream input_file(input_filename);
@@ -32,9 +38,8 @@ int main(int argc, char* argv[])
         CINT_vector.push_back(Create_CINTN(tmp_string, factories));
     }
     input_file.close();
-    /// ********************************************************
+    /* ================ Outputiing ================ */
 
-    // Outputting
     for (vector<CIntN*>::iterator it = CINT_vector.begin(); it != CINT_vector.end(); ++it)
     {
         (*it)->output((*it)->out_file());
@@ -42,13 +47,26 @@ int main(int argc, char* argv[])
     }
     CIntN0 a(3, true, "543", "-");
     CIntN1 b(3, false, "111", "-");
-    //CIntN1 f(3, true, "432", "-");
     CIntN0 c = a-b;
     cout << "Frankenstein assembled from CIntN0 and CIntN1: ";
     c.print();
-    //c = f + b;
-    //cout << "Waiting for 321..." << endl;
-    //c.print();
 
+    /* ================ Measuring elapsed time ================ */
+    /* ============= 18274655 + 28124356 x100000 ==============*/
+       
+    CIntN0 num_1(8, true, "18274655", "-");
+    CIntN0 num_2(8, true, "28124356", "-");
+    CIntN0 TMP;
+
+    timer T;
+    for (int i = 0; i < 100000; ++i)
+    {
+        TMP = num_1 + num_2;
+    }
+
+    cout << "Seconds elapsed with omp: " << T.section_time() << endl;
+
+    // Seconds Elapsed without OMP: +- 2sec
+    // Seconds Elapsed with OMP: +- 4sec :))
     return 0;
 }
