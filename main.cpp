@@ -1,16 +1,21 @@
-#include "CIntN.h"
-#include "Create.h"
-#include "Autotest.h"
-#include "Timer.h"
-
 int main(int argc, char* argv[])
 {
-    if (!autotest())
+    try
     {
+        autotest();
+        cout << "Autotest passed." << endl;
+    }
+    catch (const test_error& exc)
+    {
+        cout << "Failed test " << exc.test_number << ": wrong result is " << exc.test_result << endl;
         cout << "Autotest Failed!" << endl;
         exit(-1);
     }
-    cout << "Autotest passed" << endl;
+    catch (...)
+    {
+        cout << "Unknown exception caught during autotest. Exiting." << endl;
+        exit(-1);
+    }
 
     string input_filename = "Input.txt";
     ifstream input_file(input_filename);
