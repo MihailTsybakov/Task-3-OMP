@@ -1,3 +1,8 @@
+#include "CIntN.h"
+#include "Create.h"
+#include "Autotest.h"
+#include "Timer.h"
+
 int main(int argc, char* argv[])
 {
     try
@@ -59,14 +64,16 @@ int main(int argc, char* argv[])
     CIntN0 TMP;
 
     timer T;
+//#pragma omp parallel for  // ~ dll error here
     for (int i = 0; i < 100000; ++i)
     {
-        TMP = num_1 + num_2;
+        TMP = num_1 - num_2; // (*)
     }
 
     cout << "Seconds elapsed with omp: " << T.section_time() << endl;
 
     // Seconds Elapsed without OMP: +- 2sec
-    // Seconds Elapsed with OMP: +- 4sec :))
+    // Seconds Elapsed with OMP: +- 5sec :) for "+" in (*)
+    // Seconds Elapsed with OMP: +- 2.5 sec for "-" in (*)
     return 0;
 }
