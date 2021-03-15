@@ -89,7 +89,7 @@ void CIntN::print() const noexcept
     cout << endl;
 }
 
-long long int CIntN::getabs() const noexcept
+int CIntN::getabs() const noexcept
 {
     int num = 0;
     for (int i = dimension - 1; i >= 0; --i)
@@ -110,38 +110,77 @@ CIntN::operator int() const noexcept
     sign == true? num *= 1 : num *= -1;
     return num;
 }
-string CIntN::pure_plus(const CIntN& num_1, const CIntN& num_2) const
+//string CIntN::pure_plus(const CIntN& num_1, const CIntN& num_2) const
+//{
+//    int* res_digits = new int[num_1.dimension];
+//    for (int i = 0; i < num_1.dimension; ++i)
+//    {
+//        res_digits[i] = 0;
+//    }
+////#pragma omp parallel for
+//    for (int i = num_1.dimension - 1; i >= 0; --i)
+//    {
+//        int sum = num_1.digits[i] + num_2.digits[i] + res_digits[i];
+//        if (sum > 9)
+//        {
+//            if (i == 0)
+//            {
+//                 for (int j = 0; j < num_1.dimension; ++j)
+//                {
+//                    res_digits[i] = 9;
+//                }
+//            }
+//            else
+//            {
+//                res_digits[i] = sum - 10;
+//                res_digits[i - 1] = 1;
+//            }
+//        }
+//        else
+//        {
+//            res_digits[i] = sum;
+//        }
+//    }
+//    string res_sdigits = "";
+//    for (int i = 0; i < num_1.dimension; ++i)
+//    {
+//        res_sdigits += static_cast<char>(res_digits[i] + 48);
+//    }
+//    delete[] res_digits;
+//    return res_sdigits;
+//}
+
+string CIntN::pure_plus(const CIntN& num_1, const CIntN& num_2) const // Parallel modification
 {
     int* res_digits = new int[num_1.dimension];
     for (int i = 0; i < num_1.dimension; ++i)
     {
         res_digits[i] = 0;
     }
-//#pragma omp parallel for
+#pragma omp parallel for
     for (int i = num_1.dimension - 1; i >= 0; --i)
     {
-        int sum = num_1.digits[i] + num_2.digits[i] + res_digits[i];
-        if (sum > 9)
+        res_digits[i] += num_1.digits[i] + num_2.digits[i];
+    }
+    string res_sdigits = "";
+    for (int i = num_1.dimension - 1; i >= 0; --i)
+    {
+        if (res_digits[i] > 9)
         {
             if (i == 0)
             {
-                 for (int j = 0; j < num_1.dimension; ++j)
+                for (int i = 0; i < num_1.dimension; ++i)
                 {
                     res_digits[i] = 9;
                 }
             }
             else
             {
-                res_digits[i] = sum - 10;
-                res_digits[i - 1] = 1;
+                res_digits[i - 1] += 1;
+                res_digits[i] -= 10;
             }
         }
-        else
-        {
-            res_digits[i] = sum;
-        }
     }
-    string res_sdigits = "";
     for (int i = 0; i < num_1.dimension; ++i)
     {
         res_sdigits += static_cast<char>(res_digits[i] + 48);
@@ -150,10 +189,68 @@ string CIntN::pure_plus(const CIntN& num_1, const CIntN& num_2) const
     return res_sdigits;
 }
 
-string CIntN::pure_minus(const CIntN& num_1, const CIntN& num_2) const
+//string CIntN::pure_minus(const CIntN& num_1, const CIntN& num_2) const
+//{
+//    int* res_digits = new int[num_1.dimension];
+//    int* digits_1 = new int[num_1.dimension], *digits_2 = new int[num_1.dimension];
+//    for (int i = 0; i < num_1.dimension; ++i)
+//    {
+//        digits_1[i] = num_1.digits[i];
+//        digits_2[i] = num_2.digits[i];
+//        res_digits[i] = 0;
+//    }
+//    bool sign = true;
+//    if (num_1.getabs() < num_2.getabs())
+//    {
+//        sign = false;
+//        int* tmp = digits_2;
+//        digits_2 = digits_1;
+//        digits_1 = tmp;
+//    }
+////#pragma omp parallel for
+//    for (int i = 0; i < num_1.dimension; ++i)
+//    {
+//        int delta = digits_1[i] - digits_2[i];
+//        if (delta >= 0)
+//        {
+//            res_digits[i] = delta;
+//        }
+//        else
+//        {
+//            res_digits[i] = 10 + delta;
+//            int j = i - 1;
+//            while (res_digits[j] == 0)
+//            {
+//                j--;
+//            }
+//            res_digits[j] -= 1;
+//            j++;
+//            while (j < i)
+//            {
+//                res_digits[j] = 9;
+//                j++;
+//            }
+//        }
+//    }
+//    string res_sdigits = "";
+//    if (sign != true)
+//    {
+//        res_sdigits += '-';
+//    }
+//    for (int i = 0; i < num_1.dimension; ++i)
+//    {
+//        res_sdigits += static_cast<char>(res_digits[i] + 48);
+//    }
+//    delete[] res_digits;
+//    delete[] digits_1;
+//    delete[] digits_2;
+//    return res_sdigits;
+//}
+
+string CIntN::pure_minus(const CIntN& num_1, const CIntN& num_2) const // Parallel modification
 {
     int* res_digits = new int[num_1.dimension];
-    int* digits_1 = new int[num_1.dimension], *digits_2 = new int[num_1.dimension];
+    int* digits_1 = new int[num_1.dimension], * digits_2 = new int[num_1.dimension];
     for (int i = 0; i < num_1.dimension; ++i)
     {
         digits_1[i] = num_1.digits[i];
@@ -168,22 +265,18 @@ string CIntN::pure_minus(const CIntN& num_1, const CIntN& num_2) const
         digits_2 = digits_1;
         digits_1 = tmp;
     }
-//#pragma omp parallel for
+    //#pragma omp parallel for
     for (int i = 0; i < num_1.dimension; ++i)
     {
-        int delta = digits_1[i] - digits_2[i];
-        if (delta >= 0)
+        res_digits[i] = digits_1[i] - digits_2[i];
+    }
+    string res_sdigits = "";
+    for (int i = 0; i < num_1.dimension; ++i)
+    {
+        if (res_digits[i] < 0)
         {
-            res_digits[i] = delta;
-        }
-        else
-        {
-            res_digits[i] = 10 + delta;
             int j = i - 1;
-            while (res_digits[j] == 0)
-            {
-                j--;
-            }
+            while (res_digits[j] == 0) j--;
             res_digits[j] -= 1;
             j++;
             while (j < i)
@@ -191,9 +284,9 @@ string CIntN::pure_minus(const CIntN& num_1, const CIntN& num_2) const
                 res_digits[j] = 9;
                 j++;
             }
+            res_digits[i] += 10;
         }
     }
-    string res_sdigits = "";
     if (sign != true)
     {
         res_sdigits += '-';
