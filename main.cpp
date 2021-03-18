@@ -2,6 +2,7 @@
 #include "Create.h"
 #include "Autotest.h"
 #include "Timer.h"
+#include <chrono>
 
 int main(int argc, char* argv[])
 {
@@ -74,10 +75,13 @@ int main(int argc, char* argv[])
 
     CIntN0 TMP(num_dimensions, true, tmp.str(), "-");
 
-    timer T;
+    auto start = std::chrono::system_clock::now();
     // Evaluation here
     TMP = num_1 + num_2;
-    cout << "Seconds elapsed with omp: " << T.section_time() << endl;
+    auto end = std::chrono::system_clock::now();
+    int elapsed_ms = static_cast<int>(std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+    cout << "Milliseconds elapsed: " << elapsed_ms << endl;
+    
 
     // Seconds Elapsed without OMP: +- 2sec
     // Seconds Elapsed with OMP: +- 5sec :) for "+" in (*)
