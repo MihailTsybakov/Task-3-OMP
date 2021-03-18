@@ -53,23 +53,30 @@ int main(int argc, char* argv[])
     CIntN0 a(3, true, "543", "-");
     CIntN1 b(3, false, "111", "-");
     CIntN0 c = a-b;
-    cout << "Frankenstein assembled from CIntN0 and CIntN1: ";
+    //cout << "Frankenstein assembled from CIntN0 and CIntN1: ";
     c.print();
 
     /* ================ Measuring elapsed time ================ */
     /* ============= 18274655 + 28124356 x100000 ==============*/
        
-    CIntN0 num_1(8, true, "18274655", "-");
-    CIntN0 num_2(8, true, "28124356", "-");
-    CIntN0 TMP;
+    int num_dimensions = 10e5;
 
-    timer T;
-//#pragma omp parallel for  // ~ dll error here
-    for (int i = 0; i < 100000; ++i)
+    stringstream digits_1, digits_2, tmp;
+    for (int i = 0; i < num_dimensions; ++i) // Gens rnadom numbers
     {
-        TMP = num_1 - num_2; // (*)
+        digits_1 << rand() % 10;
+        digits_2 << rand() % 10;
+        tmp << 0;
     }
 
+    CIntN0 num_1(num_dimensions, true, digits_1.str(), "-");
+    CIntN0 num_2(num_dimensions, true, digits_2.str(), "-");
+
+    CIntN0 TMP(num_dimensions, true, tmp.str(), "-");
+
+    timer T;
+    // Evaluation here
+    TMP = num_1 + num_2;
     cout << "Seconds elapsed with omp: " << T.section_time() << endl;
 
     // Seconds Elapsed without OMP: +- 2sec
