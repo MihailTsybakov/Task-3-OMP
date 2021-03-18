@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
     int num_dimensions = 10e5;
 
     stringstream digits_1, digits_2, tmp;
-    for (int i = 0; i < num_dimensions; ++i) // Gens rnadom numbers
+    for (int i = 0; i < num_dimensions; ++i) // Gens random numbers
     {
         digits_1 << rand() % 10;
         digits_2 << rand() % 10;
