@@ -12,9 +12,6 @@ public:
     ~CIntN0();
 
     int output(string FileName) override;
-
-    friend CIntN0 operator+(const CIntN& first, const CIntN& second);
-    friend CIntN0 operator-(const CIntN& first, const CIntN& second);
 };
 
 #endif // CINTHORI
