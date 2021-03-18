@@ -265,7 +265,7 @@ string CIntN::pure_minus(const CIntN& num_1, const CIntN& num_2) const // Parall
         digits_2 = digits_1;
         digits_1 = tmp;
     }
-    //#pragma omp parallel for
+    #pragma omp parallel for
     for (int i = 0; i < num_1.dimension; ++i)
     {
         res_digits[i] = digits_1[i] - digits_2[i];
