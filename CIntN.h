@@ -35,8 +35,8 @@ public:
 
     virtual int output(string FileName) = 0;
 
-    //friend CIntN0 operator+(const CIntN& first, const CIntN& second);
-    //friend CIntN0 operator-(const CIntN& first, const CIntN& second);
+    friend CIntN0 operator+(const CIntN& first, const CIntN& second);
+    friend CIntN0 operator-(const CIntN& first, const CIntN& second);
 };
 
 #endif  //CINTN
