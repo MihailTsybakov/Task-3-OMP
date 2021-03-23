@@ -51,40 +51,32 @@ int main(int argc, char* argv[])
         (*it)->output((*it)->out_file());
         delete (*it);
     }
-    CIntN0 a(3, true, "543", "-");
-    CIntN1 b(3, false, "111", "-");
-    CIntN0 c = a-b;
-    //cout << "Frankenstein assembled from CIntN0 and CIntN1: ";
-    c.print();
+    cout << "Outputting done." << endl;
+    srand(time(0));
 
-    /* ================ Measuring elapsed time ================ */
-    /* ============= 18274655 + 28124356 x100000 ==============*/
-       
-    int num_dimensions = 10e5;
+    /* ================ Time Measurement ================ */
+    int num_dimension = 150'000'000;
 
-    stringstream digits_1, digits_2, tmp;
-    for (int i = 0; i < num_dimensions; ++i) // Gens random numbers
+    cout << "Generating numbers with length " << num_dimension << "..." << endl;
+    vector<int> digits_1, digits_2;
+    for (int i = 0; i < num_dimension; ++i)
     {
-        digits_1 << rand() % 10;
-        digits_2 << rand() % 10;
-        tmp << 0;
+        digits_1.push_back(rand() % 10);
+        digits_2.push_back(rand() % 10);
     }
 
-    CIntN0 num_1(num_dimensions, true, digits_1.str(), "-");
-    CIntN0 num_2(num_dimensions, true, digits_2.str(), "-");
+    CIntN0 Num_1(num_dimension, true, digits_1, "-");
+    CIntN0 Num_2(num_dimension, true, digits_2, "-");
 
-    CIntN0 TMP(num_dimensions, true, tmp.str(), "-");
-
+    cout << "Checkpoint: numbers generated." << endl;
     auto start = std::chrono::system_clock::now();
-    // Evaluation here
-    TMP = num_1 + num_2;
+    Num_1 + Num_2;
     auto end = std::chrono::system_clock::now();
-    int elapsed_ms = static_cast<int>(std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
-    cout << "Milliseconds elapsed: " << elapsed_ms << endl;
+    int elapsed =  static_cast<int>(std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+    cout << "Elapsed: " << elapsed << " ms." << endl;
     
+    // 150kk: 17.5 s no omp
+    // 150kk: 12.5 s omp
 
-    // Seconds Elapsed without OMP: +- 2sec
-    // Seconds Elapsed with OMP: +- 5sec :) for "+" in (*)
-    // Seconds Elapsed with OMP: +- 2.5 sec for "-" in (*)
     return 0;
 }
