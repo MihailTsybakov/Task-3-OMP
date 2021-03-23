@@ -3,6 +3,11 @@
 
 int CIntN1::output(string FileName) //override
 {
+    if (update_needed)
+    {
+        this->update_digits();
+        update_needed = false;
+    }
     ofstream output_file(FileName);
     if (!output_file.is_open())
     {
