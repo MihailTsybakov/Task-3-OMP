@@ -6,6 +6,7 @@ CIntN::CIntN()
     sign = true;
     dimension = 0;
     digits = nullptr;
+    update_needed = false;
 }
 CIntN::~CIntN()
 {
@@ -22,6 +23,7 @@ CIntN::CIntN(int dimension, bool sign, string digits_string, string output_file)
     this->sign = sign;
     this->dimension = dimension;
     this->output_file = output_file;
+    this->update_needed = false;
     if (static_cast<size_t>(dimension) != digits_string.size())
     {
         cout << "Error: dimension mismatch." << endl;
@@ -34,9 +36,25 @@ CIntN::CIntN(int dimension, bool sign, string digits_string, string output_file)
         if (symbol < 48 || symbol > 57)
         {
             cout << "Error: non-numeric character found." << endl;
+            //cout << "Digits string is: " << digits_string << endl;
             exit(-1);
         }
         digits[i] = symbol - 48;
+    }
+}
+
+CIntN::CIntN(int dimension, bool sign, vector<int> digits_vect, string output_file)
+{
+    this->sign = sign;
+    this->dimension = dimension;
+    this->output_file = output_file;
+    this->update_needed = false;
+    digits = new int[dimension];
+    size_t for_limit;
+    (sign) ? for_limit = digits_vect.size() : for_limit = digits_vect.size() - 1;
+    for (size_t i = 0; i < for_limit; ++i)
+    {
+        digits[i] = digits_vect[i];
     }
 }
 
@@ -45,6 +63,7 @@ CIntN::CIntN(const CIntN& to_copy)
     sign = to_copy.sign;
     dimension = to_copy.dimension;
     digits = new int[dimension];
+    update_needed = to_copy.update_needed;
     for (int i = 0; i < dimension; ++i)
     {
         digits[i] = to_copy.digits[i];
@@ -60,6 +79,7 @@ CIntN& CIntN::operator=(const CIntN& equals_to)
     dimension = equals_to.dimension;
     digits = new int[dimension];
     sign = equals_to.sign;
+    update_needed = equals_to.update_needed;
     for (int i = 0; i < dimension; ++i)
     {
         digits[i] = equals_to.digits[i];
@@ -74,6 +94,11 @@ string CIntN::out_file() const noexcept
 
 void CIntN::print() const noexcept
 {
+    if (this->update_needed)
+    {
+        this->update_digits();
+        this->update_needed = false;
+    }
     if (dimension == 0)
     {
         return;
@@ -110,194 +135,76 @@ CIntN::operator int() const noexcept
     sign == true? num *= 1 : num *= -1;
     return num;
 }
-//string CIntN::pure_plus(const CIntN& num_1, const CIntN& num_2) const
-//{
-//    int* res_digits = new int[num_1.dimension];
-//    for (int i = 0; i < num_1.dimension; ++i)
-//    {
-//        res_digits[i] = 0;
-//    }
-////#pragma omp parallel for
-//    for (int i = num_1.dimension - 1; i >= 0; --i)
-//    {
-//        int sum = num_1.digits[i] + num_2.digits[i] + res_digits[i];
-//        if (sum > 9)
-//        {
-//            if (i == 0)
-//            {
-//                 for (int j = 0; j < num_1.dimension; ++j)
-//                {
-//                    res_digits[i] = 9;
-//                }
-//            }
-//            else
-//            {
-//                res_digits[i] = sum - 10;
-//                res_digits[i - 1] = 1;
-//            }
-//        }
-//        else
-//        {
-//            res_digits[i] = sum;
-//        }
-//    }
-//    string res_sdigits = "";
-//    for (int i = 0; i < num_1.dimension; ++i)
-//    {
-//        res_sdigits += static_cast<char>(res_digits[i] + 48);
-//    }
-//    delete[] res_digits;
-//    return res_sdigits;
-//}
 
-string CIntN::pure_plus(const CIntN& num_1, const CIntN& num_2) const // Parallel modification
+void CIntN::update_digits() const noexcept
 {
-    int* res_digits = new int[num_1.dimension];
-    for (int i = 0; i < num_1.dimension; ++i)
+    if (this->sign) // Updating positive number's digits
     {
-        res_digits[i] = 0;
-    }
-#pragma omp parallel for
-    for (int i = num_1.dimension - 1; i >= 0; --i)
-    {
-        res_digits[i] += num_1.digits[i] + num_2.digits[i];
-    }
-    string res_sdigits = "";
-    for (int i = num_1.dimension - 1; i >= 0; --i)
-    {
-        if (res_digits[i] > 9)
+        for (int i = dimension - 1; i >= 0; --i)
         {
-            if (i == 0)
+            if (digits[i] >= 10)
             {
-                for (int i = 0; i < num_1.dimension; ++i)
+                if (i == 0)
                 {
-                    res_digits[i] = 9;
+                    cout << "Error: too big number..." << endl;
+                    exit(-1);
                 }
-            }
-            else
-            {
-                res_digits[i - 1] += 1;
-                res_digits[i] -= 10;
+                digits[i] -= 10;
+                digits[i - 1] += 1;
             }
         }
     }
-    for (int i = 0; i < num_1.dimension; ++i)
+    else // Updating negative number's digits
     {
-        res_sdigits += static_cast<char>(res_digits[i] + 48);
+        for (int i = 0; i < dimension; ++i)
+        {
+            if (digits[i] < 0)
+            {
+                int j = i - 1;
+                while (digits[j] == 0) j--;
+                digits[j] -= 1, j++;
+                while (j < i) digits[j] = 9, j++;
+                digits[i] += 10;
+            }
+        }
     }
-    delete[] res_digits;
-    return res_sdigits;
 }
 
-//string CIntN::pure_minus(const CIntN& num_1, const CIntN& num_2) const
-//{
-//    int* res_digits = new int[num_1.dimension];
-//    int* digits_1 = new int[num_1.dimension], *digits_2 = new int[num_1.dimension];
-//    for (int i = 0; i < num_1.dimension; ++i)
-//    {
-//        digits_1[i] = num_1.digits[i];
-//        digits_2[i] = num_2.digits[i];
-//        res_digits[i] = 0;
-//    }
-//    bool sign = true;
-//    if (num_1.getabs() < num_2.getabs())
-//    {
-//        sign = false;
-//        int* tmp = digits_2;
-//        digits_2 = digits_1;
-//        digits_1 = tmp;
-//    }
-////#pragma omp parallel for
-//    for (int i = 0; i < num_1.dimension; ++i)
-//    {
-//        int delta = digits_1[i] - digits_2[i];
-//        if (delta >= 0)
-//        {
-//            res_digits[i] = delta;
-//        }
-//        else
-//        {
-//            res_digits[i] = 10 + delta;
-//            int j = i - 1;
-//            while (res_digits[j] == 0)
-//            {
-//                j--;
-//            }
-//            res_digits[j] -= 1;
-//            j++;
-//            while (j < i)
-//            {
-//                res_digits[j] = 9;
-//                j++;
-//            }
-//        }
-//    }
-//    string res_sdigits = "";
-//    if (sign != true)
-//    {
-//        res_sdigits += '-';
-//    }
-//    for (int i = 0; i < num_1.dimension; ++i)
-//    {
-//        res_sdigits += static_cast<char>(res_digits[i] + 48);
-//    }
-//    delete[] res_digits;
-//    delete[] digits_1;
-//    delete[] digits_2;
-//    return res_sdigits;
-//}
-
-string CIntN::pure_minus(const CIntN& num_1, const CIntN& num_2) const // Parallel modification
+vector<int> CIntN::pure_plus(const CIntN& num_1, const CIntN& num_2) const // Parallel mod. 1
 {
-    int* res_digits = new int[num_1.dimension];
-    int* digits_1 = new int[num_1.dimension], * digits_2 = new int[num_1.dimension];
+    vector<int> res_digits;
+    res_digits.resize(num_1.dimension);
+#pragma omp parallel for
     for (int i = 0; i < num_1.dimension; ++i)
     {
-        digits_1[i] = num_1.digits[i];
-        digits_2[i] = num_2.digits[i];
-        res_digits[i] = 0;
+        res_digits[i] = num_1.digits[i] + num_2.digits[i];
     }
+    return res_digits;
+}
+
+vector<int> CIntN::pure_minus(const CIntN& num_1, const CIntN& num_2) const // Parallel modification
+{
+    vector<int> res_digits;
+    res_digits.resize(num_1.dimension);
     bool sign = true;
-    if (num_1.getabs() < num_2.getabs())
+    if (num_1.getabs() > num_2.getabs())
     {
-        sign = false;
-        int* tmp = digits_2;
-        digits_2 = digits_1;
-        digits_1 = tmp;
-    }
-    #pragma omp parallel for
-    for (int i = 0; i < num_1.dimension; ++i)
-    {
-        res_digits[i] = digits_1[i] - digits_2[i];
-    }
-    string res_sdigits = "";
-    for (int i = 0; i < num_1.dimension; ++i)
-    {
-        if (res_digits[i] < 0)
+#pragma omp parallel for
+        for (int i = 0; i < num_1.dimension; ++i)
         {
-            int j = i - 1;
-            while (res_digits[j] == 0) j--;
-            res_digits[j] -= 1;
-            j++;
-            while (j < i)
-            {
-                res_digits[j] = 9;
-                j++;
-            }
-            res_digits[i] += 10;
+            res_digits[i] = num_1.digits[i] - num_2.digits[i];
         }
     }
-    if (sign != true)
+    else
     {
-        res_sdigits += '-';
+        sign = false;
+#pragma omp parallel for
+        for (int i = 0; i < num_1.dimension; ++i)
+        {
+            res_digits[i] = num_2.digits[i] - num_1.digits[i];
+        }
     }
-    for (int i = 0; i < num_1.dimension; ++i)
-    {
-        res_sdigits += static_cast<char>(res_digits[i] + 48);
-    }
-    delete[] res_digits;
-    delete[] digits_1;
-    delete[] digits_2;
-    return res_sdigits;
+    res_digits.push_back(static_cast<int>(sign));
+    return res_digits;
 }
 
