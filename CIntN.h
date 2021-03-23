@@ -18,14 +18,18 @@ class CIntN
 protected:
     int dimension;
     bool sign; // True = "+"
-    int* digits; // Digits array
-    string pure_plus(const CIntN& num_1, const CIntN& num_2) const;
-    string pure_minus(const CIntN& num_1, const CIntN& num_2) const;
+    mutable bool update_needed; // Is digits update needed
+    mutable int* digits; // Digits array
     string output_file;
+
+    vector<int> pure_plus(const CIntN& num_1, const CIntN& num_2) const;
+    vector<int> pure_minus(const CIntN& num_1, const CIntN& num_2) const;
+    void update_digits() const noexcept;
 public:
     CIntN();
     virtual ~CIntN();
     CIntN(int dimension, bool sign, string digits_string, string output_file);
+    CIntN(int dimension, bool sign, vector<int> digits_vect, string output_file);
     CIntN(const CIntN& to_copy);
     CIntN& operator=(const CIntN& equals_to);
     void print() const noexcept;
