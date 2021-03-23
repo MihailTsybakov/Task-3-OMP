@@ -36,7 +36,6 @@ CIntN::CIntN(int dimension, bool sign, string digits_string, string output_file)
         if (symbol < 48 || symbol > 57)
         {
             cout << "Error: non-numeric character found." << endl;
-            //cout << "Digits string is: " << digits_string << endl;
             exit(-1);
         }
         digits[i] = symbol - 48;
@@ -182,7 +181,7 @@ vector<int> CIntN::pure_plus(const CIntN& num_1, const CIntN& num_2) const // Pa
     return res_digits;
 }
 
-vector<int> CIntN::pure_minus(const CIntN& num_1, const CIntN& num_2) const // Parallel modification
+vector<int> CIntN::pure_minus(const CIntN& num_1, const CIntN& num_2) const // Parallel mod. 1
 {
     vector<int> res_digits;
     res_digits.resize(num_1.dimension);
