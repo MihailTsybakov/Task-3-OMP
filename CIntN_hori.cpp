@@ -3,6 +3,11 @@
 
 int CIntN0::output(string FileName) //override
 {
+    if (update_needed)
+    {
+        this->update_digits();
+        update_needed = false;
+    }
     ofstream output_file(FileName);
     if (!output_file.is_open())
     {
@@ -32,6 +37,8 @@ CIntN0::~CIntN0()
 
 CIntN0 operator+(const CIntN& first, const CIntN& second)
 {
+    if (first.update_needed) first.update_digits(), first.update_needed = false;
+    if (second.update_needed) second.update_digits(), second.update_needed = false;
     try
     {
         if (first.dimension != second.dimension)
@@ -41,34 +48,47 @@ CIntN0 operator+(const CIntN& first, const CIntN& second)
         // "+" + "+"
         if (first.sign == true && second.sign == true)
         {
-            string res_digits = first.pure_plus(first, second);
-            return CIntN0(first.dimension, true, res_digits, first.output_file);
+            vector<int> res_digits = first.pure_plus(first, second);
+            CIntN0 res(first.dimension, true, res_digits, first.output_file);
+            res.update_needed = true;
+            return res;
         }
         // "+" + "-" addition
         if (first.sign == true && second.sign == false)
         {
-            string res_digits = first.pure_minus(first, second);
-            if (res_digits[0] == '-')
+            vector<int> res_digits = first.pure_minus(first, second);
+            if (res_digits[first.dimension] == 0)
             {
-                return CIntN0(first.dimension, false, res_digits.substr(1, res_digits.size()-1), first.output_file);
+                CIntN0 res(first.dimension, false, res_digits, first.output_file);
+                res.update_needed = true;
+                return res;
             }
-            return CIntN0(first.dimension, true, res_digits, first.output_file);
+            CIntN0 res(first.dimension, true, res_digits, first.output_file);
+            res.update_needed = true;
+            return res;
         }
         // "-" + "+"
         if (first.sign == false && second.sign == true)
         {
-            string res_digits = first.pure_minus(second, first);
-            if (res_digits[0] == '-')
+            vector<int> res_digits = first.pure_minus(second, first);
+            if (res_digits[first.dimension] == 0)
             {
-                return CIntN0(first.dimension, false, res_digits.substr(1, res_digits.size()-1), first.output_file);
+                CIntN0 res(first.dimension, false, res_digits, first.output_file);
+                res.update_needed = true;
+                return res;
             }
-            return CIntN0(first.dimension, true, res_digits, first.output_file);
+            CIntN0 res(first.dimension, true, res_digits, first.output_file);
+            res.update_needed = true;
+            return res;
         }
         // "-" + "-"
         if (first.sign == false && second.sign == false)
         {
-            string res_digits = first.pure_plus(first, second);
-            return CIntN0(first.dimension, false, res_digits, first.output_file);
+            vector<int> res_digits = first.pure_plus(first, second);
+            res_digits.push_back(0);
+            CIntN0 res(first.dimension, false, res_digits, first.output_file);
+            res.update_needed = true;
+            return res;
         }
     }
     catch (const exception& exc)
@@ -80,6 +100,8 @@ CIntN0 operator+(const CIntN& first, const CIntN& second)
 
 CIntN0 operator-(const CIntN& first, const CIntN& second)
 {
+    if (first.update_needed) first.update_digits(), first.update_needed = false;
+    if (second.update_needed) second.update_digits(), second.update_needed = false;
     try
     {
         if (first.dimension != second.dimension)
@@ -89,34 +111,47 @@ CIntN0 operator-(const CIntN& first, const CIntN& second)
         // "+" - "+" subtraction
         if (first.sign == true && second.sign == true)
         {
-            string res_digits = first.pure_minus(first, second);
-            if (res_digits[0] == '-')
+            vector<int> res_digits = first.pure_minus(first, second);
+            if (res_digits[first.dimension] == 0)
             {
-                return CIntN0(first.dimension, false, res_digits.substr(1, res_digits.size()-1), first.output_file);
+               CIntN0 res(first.dimension, false, res_digits, first.output_file);
+               res.update_needed = true;
+               return res;
             }
-            return CIntN0(first.dimension, true, res_digits, first.output_file);
+            CIntN0 res(first.dimension, true, res_digits, first.output_file);
+            res.update_needed = true;
+            return res;
         }
         // "+" - "-"
         if (first.sign == true && second.sign == false)
         {
-            string res_digits = first.pure_plus(first, second);
-            return CIntN0(first.dimension, true, res_digits, first.output_file);
+            vector<int> res_digits = first.pure_plus(first, second);
+            CIntN0 res(first.dimension, true, res_digits, first.output_file);
+            res.update_needed = true;
+            return res;
         }
         // "-" - "+"
         if (first.sign == false && second.sign == true)
         {
-            string res_digits = first.pure_plus(first, second);
-            return CIntN0(first.dimension, false, res_digits, first.output_file);
+            vector<int> res_digits = first.pure_plus(first, second);
+            res_digits.push_back(0);
+            CIntN0 res(first.dimension, false, res_digits, first.output_file);
+            res.update_needed = true;
+            return res;
         }
         // "-" - "-"
         if (first.sign == false && second.sign == false)
         {
-            string res_digits = first.pure_minus(second, first);
-            if (res_digits[0] == '-')
+            vector<int> res_digits = first.pure_minus(second, first);
+            if (res_digits[first.dimension] == 0)
             {
-                return CIntN0(first.dimension, false, res_digits.substr(1, res_digits.size()-1), first.output_file);
+                CIntN0 res(first.dimension, false, res_digits, first.output_file);
+                res.update_needed = true;
+                return res;
             }
-            return CIntN0(first.dimension, true, res_digits, first.output_file);
+            CIntN0 res(first.dimension, true, res_digits, first.output_file);
+            res.update_needed = true;
+            return res;
         }
     }
     catch (const exception& exc)
