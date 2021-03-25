@@ -6,7 +6,6 @@ CIntN::CIntN()
     sign = true;
     dimension = 0;
     digits = nullptr;
-    update_needed = false;
 }
 CIntN::~CIntN()
 {
@@ -23,10 +22,11 @@ CIntN::CIntN(int dimension, bool sign, string digits_string, string output_file)
     this->sign = sign;
     this->dimension = dimension;
     this->output_file = output_file;
-    this->update_needed = false;
     if (static_cast<size_t>(dimension) != digits_string.size())
     {
         cout << "Error: dimension mismatch." << endl;
+        cout << "Debug: >" << digits_string << "<" << endl;
+        cout << dimension << " x " << digits_string.size() << endl;
         exit(-1);
     }
     digits = new int[dimension];
@@ -36,6 +36,7 @@ CIntN::CIntN(int dimension, bool sign, string digits_string, string output_file)
         if (symbol < 48 || symbol > 57)
         {
             cout << "Error: non-numeric character found." << endl;
+            cout << "Digits string is: " << digits_string << endl;
             exit(-1);
         }
         digits[i] = symbol - 48;
@@ -47,11 +48,8 @@ CIntN::CIntN(int dimension, bool sign, vector<int> digits_vect, string output_fi
     this->sign = sign;
     this->dimension = dimension;
     this->output_file = output_file;
-    this->update_needed = false;
     digits = new int[dimension];
-    size_t for_limit;
-    (sign) ? for_limit = digits_vect.size() : for_limit = digits_vect.size() - 1;
-    for (size_t i = 0; i < for_limit; ++i)
+    for (size_t i = 0; i < dimension; ++i)
     {
         digits[i] = digits_vect[i];
     }
@@ -62,7 +60,6 @@ CIntN::CIntN(const CIntN& to_copy)
     sign = to_copy.sign;
     dimension = to_copy.dimension;
     digits = new int[dimension];
-    update_needed = to_copy.update_needed;
     for (int i = 0; i < dimension; ++i)
     {
         digits[i] = to_copy.digits[i];
@@ -78,7 +75,6 @@ CIntN& CIntN::operator=(const CIntN& equals_to)
     dimension = equals_to.dimension;
     digits = new int[dimension];
     sign = equals_to.sign;
-    update_needed = equals_to.update_needed;
     for (int i = 0; i < dimension; ++i)
     {
         digits[i] = equals_to.digits[i];
@@ -93,11 +89,6 @@ string CIntN::out_file() const noexcept
 
 void CIntN::print() const noexcept
 {
-    if (this->update_needed)
-    {
-        this->update_digits();
-        this->update_needed = false;
-    }
     if (dimension == 0)
     {
         return;
@@ -125,7 +116,6 @@ int CIntN::getabs() const noexcept
 
 CIntN::operator int() const noexcept
 {
-
     int num = 0;
     for (int i = dimension - 1; i >= 0; --i)
     {
@@ -135,58 +125,52 @@ CIntN::operator int() const noexcept
     return num;
 }
 
-void CIntN::update_digits() const noexcept
-{
-    if (this->sign) // Updating positive number's digits
-    {
-        for (int i = dimension - 1; i >= 0; --i)
-        {
-            if (digits[i] >= 10)
-            {
-                if (i == 0)
-                {
-                    cout << "Error: too big number..." << endl;
-                    exit(-1);
-                }
-                digits[i] -= 10;
-                digits[i - 1] += 1;
-            }
-        }
-    }
-    else // Updating negative number's digits
-    {
-        for (int i = 0; i < dimension; ++i)
-        {
-            if (digits[i] < 0)
-            {
-                int j = i - 1;
-                while (digits[j] == 0) j--;
-                digits[j] -= 1, j++;
-                while (j < i) digits[j] = 9, j++;
-                digits[i] += 10;
-            }
-        }
-    }
-}
-
 vector<int> CIntN::pure_plus(const CIntN& num_1, const CIntN& num_2) const // Parallel mod. 1
 {
     vector<int> res_digits;
     res_digits.resize(num_1.dimension);
+
+    /* ================ Time =================== */
+    auto start = std::chrono::system_clock::now();
+
 #pragma omp parallel for
     for (int i = 0; i < num_1.dimension; ++i)
     {
         res_digits[i] = num_1.digits[i] + num_2.digits[i];
     }
+    for (int i = num_1.dimension - 1; i >= 0; --i)
+    {
+        if (res_digits[i] >= 10)
+        {
+            if (i == 0)
+            {
+                cout << "Error: too big numbers..." << endl;
+                exit(-1);
+            }
+            res_digits[i] -= 10;
+            res_digits[i - 1] += 1;
+        }
+    }
+
+    auto end = std::chrono::system_clock::now();
+    /* ================ Time =================== */
+
+    int elapsed = static_cast<int>(std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+    cout << "Pure plus elapsed: " << elapsed << "ms" << endl;
+
     return res_digits;
 }
 
-vector<int> CIntN::pure_minus(const CIntN& num_1, const CIntN& num_2) const // Parallel mod. 1
+vector<int> CIntN::pure_minus(const CIntN& num_1, const CIntN& num_2) const // Parallel modification
 {
     vector<int> res_digits;
     res_digits.resize(num_1.dimension);
     bool sign = true;
-    if (num_1.getabs() > num_2.getabs())
+
+    /* ================ Time =================== */
+    auto start = std::chrono::system_clock::now();
+
+    if (num_1.getabs() >= num_2.getabs())
     {
 #pragma omp parallel for
         for (int i = 0; i < num_1.dimension; ++i)
@@ -203,7 +187,26 @@ vector<int> CIntN::pure_minus(const CIntN& num_1, const CIntN& num_2) const // P
             res_digits[i] = num_2.digits[i] - num_1.digits[i];
         }
     }
-    res_digits.push_back(static_cast<int>(sign));
+    for (int i = 0; i < num_1.dimension; ++i)
+    {
+        if (res_digits[i] < 0)
+        {
+            int j = i - 1;
+            while (res_digits[j] == 0) j--;
+            res_digits[j] -= 1, j++;
+            while (j < i) res_digits[j] = 9, j++;
+            res_digits[i] += 10;
+        }
+    }
+
+    auto end = std::chrono::system_clock::now();
+    /* ================ Time =================== */
+
+    int elapsed = static_cast<int>(std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+    cout << "Pure plus elapsed: " << elapsed << "ms" << endl;
+
+    if (!sign) res_digits.push_back(-1);
+
     return res_digits;
 }
 
