@@ -8,6 +8,8 @@
 #include <map>
 #include <vector>
 #include <omp.h>
+#include <sstream>
+#include <chrono>
 using namespace std;
 
 class CIntN0;
@@ -18,13 +20,11 @@ class CIntN
 protected:
     int dimension;
     bool sign; // True = "+"
-    mutable bool update_needed; // Is digits update needed
     mutable int* digits; // Digits array
     string output_file;
-
+    
     vector<int> pure_plus(const CIntN& num_1, const CIntN& num_2) const;
     vector<int> pure_minus(const CIntN& num_1, const CIntN& num_2) const;
-    void update_digits() const noexcept;
 public:
     CIntN();
     virtual ~CIntN();
