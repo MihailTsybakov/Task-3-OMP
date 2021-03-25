@@ -2,7 +2,7 @@
 #include "Create.h"
 #include "Autotest.h"
 #include "Timer.h"
-#include <chrono>
+#include <fstream>
 
 int main(int argc, char* argv[])
 {
@@ -55,28 +55,27 @@ int main(int argc, char* argv[])
     srand(time(0));
 
     /* ================ Time Measurement ================ */
-    int num_dimension = 150'000'000;
+    int num_dimension = 250'000'000;
 
     cout << "Generating numbers with length " << num_dimension << "..." << endl;
     vector<int> digits_1, digits_2;
-    for (int i = 0; i < num_dimension; ++i)
+    digits_1.resize(num_dimension);
+    digits_2.resize(num_dimension);
+    digits_1[0] = 1;
+    digits_2[0] = 2;
+    for (int i = 1; i < num_dimension; ++i)
     {
-        digits_1.push_back(rand() % 10);
-        digits_2.push_back(rand() % 10);
+        digits_1[i] = rand() % 10;
+        digits_2[i] = rand() % 10;
     }
-
     CIntN0 Num_1(num_dimension, true, digits_1, "-");
     CIntN0 Num_2(num_dimension, true, digits_2, "-");
 
     cout << "Checkpoint: numbers generated." << endl;
-    auto start = std::chrono::system_clock::now();
-    Num_1 + Num_2;
-    auto end = std::chrono::system_clock::now();
-    int elapsed =  static_cast<int>(std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
-    cout << "Elapsed: " << elapsed << " ms." << endl;
-    
-    // 150kk: 17.5 s no omp
-    // 150kk: 12.5 s omp
 
+    Num_1 + Num_2;
+    
+    // 250kk Release: 20.8 s no omp
+    // 250kk Release: 13.5 s omp
     return 0;
 }
